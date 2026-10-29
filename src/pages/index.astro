@@ -1,0 +1,200 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Signum">
+	<section class="hero">
+		<div class="hero-content">
+			<p class="eyebrow">Loan Application Prototype</p>
+
+			<h1>Welcome to Signum</h1>
+
+			<p class="subtitle">
+				A simple loan application and underwriting platform built with Astro.
+			</p>
+
+			<p class="description">
+				Loan Officers can create and submit applications for review, while
+				Credit Managers can review applications and make lending decisions.
+			</p>
+
+			<div class="actions">
+				<a class="primary-button" href="/signup">
+					First Time User
+				</a>
+
+				<a class="secondary-button" href="/login">
+					Already Have an Account
+				</a>
+			</div>
+		</div>
+
+		<div class="workflow-card">
+			<h2>How It Works</h2>
+
+			<div class="step">
+				<span class="step-number">1</span>
+
+				<div>
+					<strong>Create an Application</strong>
+					<p>Loan Officers enter borrower and loan information.</p>
+				</div>
+			</div>
+
+			<div class="step">
+				<span class="step-number">2</span>
+
+				<div>
+					<strong>Submit for Review</strong>
+					<p>The application is sent to a Credit Manager.</p>
+				</div>
+			</div>
+
+			<div class="step">
+				<span class="step-number">3</span>
+
+				<div>
+					<strong>Receive a Decision</strong>
+					<p>Credit Managers can approve, counter, or deny the application.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>
+
+<style>
+	.hero {
+		min-height: 75vh;
+		display: grid;
+		grid-template-columns: 1.2fr 0.8fr;
+		align-items: center;
+		gap: 4rem;
+	}
+
+	.hero-content {
+		max-width: 650px;
+	}
+
+	.eyebrow {
+		margin: 0 0 0.75rem;
+		font-size: 0.85rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: #2563eb;
+	}
+
+	h1 {
+		font-size: clamp(2.75rem, 7vw, 4.75rem);
+		margin-bottom: 1rem;
+	}
+
+	.subtitle {
+		font-size: 1.3rem;
+		color: #374151;
+		margin-bottom: 1rem;
+	}
+
+	.description {
+		max-width: 600px;
+		font-size: 1.05rem;
+		line-height: 1.7;
+	}
+
+	.actions {
+		display: flex;
+		gap: 1rem;
+		flex-wrap: wrap;
+		margin-top: 2rem;
+	}
+
+	.primary-button,
+	.secondary-button {
+		display: inline-block;
+		padding: 0.85rem 1.2rem;
+		border-radius: 9px;
+		font-weight: 600;
+		text-decoration: none;
+	}
+
+	.primary-button {
+		background: #2563eb;
+		color: white;
+	}
+
+	.primary-button:hover {
+		background: #1d4ed8;
+	}
+
+	.secondary-button {
+		background: white;
+		color: #2563eb;
+		border: 1px solid #d1d5db;
+	}
+
+	.secondary-button:hover {
+		background: #f9fafb;
+	}
+
+	.workflow-card {
+		background: white;
+		padding: 2rem;
+		border-radius: 16px;
+		box-shadow: 0 14px 40px rgba(0, 0, 0, 0.08);
+	}
+
+	.workflow-card h2 {
+		margin-bottom: 1.5rem;
+	}
+
+	.step {
+		display: flex;
+		gap: 1rem;
+		align-items: flex-start;
+		margin-bottom: 1.5rem;
+	}
+
+	.step:last-child {
+		margin-bottom: 0;
+	}
+
+	.step-number {
+		width: 36px;
+		height: 36px;
+		flex-shrink: 0;
+
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		border-radius: 50%;
+		background: #eff6ff;
+		color: #2563eb;
+		font-weight: 700;
+	}
+
+	.step p {
+		margin: 0.25rem 0 0;
+		font-size: 0.9rem;
+	}
+
+	@media (max-width: 850px) {
+		.hero {
+			grid-template-columns: 1fr;
+			gap: 2rem;
+			padding: 2rem 0;
+		}
+	}
+
+	@media (max-width: 550px) {
+		.actions {
+			flex-direction: column;
+		}
+
+		.primary-button,
+		.secondary-button {
+			width: 100%;
+			text-align: center;
+		}
+	}
+</style>
