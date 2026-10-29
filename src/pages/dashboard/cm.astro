@@ -1,0 +1,134 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { getDb } from "../../lib/mongodb.js";
+
+export const prerender = false;
+
+const role = Astro.cookies.get("role")?.value;
+
+if (role !== "credit_manager") {
+	return Astro.redirect("/login?error=unauthorized");
+}
+
+const db = await getDb();
+const applicationsCollection = db.collection("applications");
+
+const applications = await applicationsCollection
+	.find({ status: "in_review" })
+	.sort({ createdAt: -1 })
+	.toArray();
+	console.log("CM applications:", applications);
+	console.log("CM application count:", applications.length);
+---
+
+<Layout title="Credit Manager Dashboard">
+	<section class="dashboard">
+		<h1>Credit Manager Dashboard</h1>
+		<p>Review applications waiting for a credit decision.</p>
+
+		<h2>Applications to Review</h2>
+
+		{applications.length === 0 ? (
+			<p>No applications waiting for review.</p>
+		) : (
+			<div class="application-list">
+				<div class="application-header">
+					<span>Borrower</span>
+					<span>Loan Request</span>
+					<span>Status</span>
+					<span>Action</span>
+				</div>
+
+				{applications.map((application) => (
+					<a
+						class="application-card"
+						href={`/underwriting/${application._id.toString()}`}
+					>
+						<p>
+							<strong>
+								{application.firstName} {application.lastName}
+							</strong>
+						</p>
+
+						<p>
+							${application.loanRequest.toLocaleString()}
+						</p>
+
+						<p>{application.status}</p>
+
+						<p class="view-text">
+							Review →
+						</p>
+					</a>
+				))}
+			</div>
+		)}
+	</section>
+</Layout>
+
+<style>
+	.dashboard {
+		max-width: 900px;
+		margin: 0 auto;
+	}
+
+	.application-list {
+		display: grid;
+		gap: 0.75rem;
+		margin-top: 1rem;
+	}
+
+	.application-header {
+		display: grid;
+		grid-template-columns: 2fr 1.5fr 1fr 1fr;
+		gap: 1rem;
+		padding: 0 1.25rem 0.5rem;
+		font-size: 0.85rem;
+		font-weight: 700;
+		color: #6b7280;
+	}
+
+	.application-card {
+		background: white;
+		padding: 1rem 1.25rem;
+		border-radius: 10px;
+		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+
+		display: grid;
+		grid-template-columns: 2fr 1.5fr 1fr 1fr;
+		align-items: center;
+		gap: 1rem;
+
+		text-decoration: none;
+		color: inherit;
+
+		transition:
+			background 0.2s ease,
+			transform 0.2s ease;
+	}
+
+	.application-card:hover {
+		background: #eff6ff;
+		transform: translateY(-1px);
+	}
+
+	.application-card p {
+		margin: 0;
+	}
+
+	.view-text {
+		color: #2563eb;
+		font-weight: 600;
+	}
+
+	@media (max-width: 700px) {
+		.application-header {
+			display: none;
+		}
+
+		.application-card {
+			grid-template-columns: 1fr;
+			gap: 0.4rem;
+		}
+	}
+</style>

@@ -1,0 +1,150 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+export const prerender = false;
+
+const error = Astro.url.searchParams.get("error");
+---
+
+<Layout title="Create Application">
+	<section class="application-container">
+		<h1>Create Loan Application</h1>
+		<p>Enter the applicant's information below.</p>
+
+		{error === "invalid" && (
+			<div class="error-message">
+				Please check the application information and try again.
+			</div>
+		)}
+
+		{error === "server" && (
+			<div class="error-message">
+				Something went wrong while creating the application.
+			</div>
+		)}
+
+		<form method="POST" action="/api/applications">
+			<div class="form-group">
+				<label for="firstName">First Name</label>
+				<input
+					name="firstName"
+					id="firstName"
+					type="text"
+					required
+				/>
+			</div>
+
+			<div class="form-group">
+				<label for="lastName">Last Name</label>
+				<input
+					name="lastName"
+					id="lastName"
+					type="text"
+					required
+				/>
+			</div>
+
+			<div class="form-group">
+				<label for="loanRequest">Loan Request</label>
+				<input
+					name="loanRequest"
+					id="loanRequest"
+					type="number"
+					min="1"
+					required
+				/>
+			</div>
+
+			<div class="form-group">
+				<label for="purpose">Purpose of Loan</label>
+				<select
+					name="purpose"
+					id="purpose"
+					required
+				>
+					<option value="">Select a purpose</option>
+					<option value="purchase">Purchase</option>
+					<option value="debt_consolidation">
+						Debt Consolidation
+					</option>
+					<option value="refinance">Refinance</option>
+				</select>
+			</div>
+
+			<div class="form-group">
+				<label for="monthlyIncome">Monthly Income</label>
+				<input
+					name="monthlyIncome"
+					id="monthlyIncome"
+					type="number"
+					min="1"
+					required
+				/>
+			</div>
+
+			<div class="form-group">
+				<label for="monthlyDebt">Monthly Debt</label>
+				<input
+					name="monthlyDebt"
+					id="monthlyDebt"
+					type="number"
+					min="0"
+					required
+				/>
+			</div>
+
+			<div class="form-group">
+				<label for="creditScore">Credit Score</label>
+				<input
+					name="creditScore"
+					id="creditScore"
+					type="number"
+					min="300"
+					max="850"
+					required
+				/>
+			</div>
+
+			<button type="submit">Submit Application</button>
+		</form>
+	</section>
+</Layout>
+
+<style>
+	.application-container {
+		max-width: 650px;
+		margin: 0 auto;
+	}
+
+	form {
+		background: white;
+		padding: 2rem;
+		border-radius: 12px;
+		margin-top: 1.5rem;
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+	}
+
+	.form-group {
+		display: flex;
+		flex-direction: column;
+		margin-bottom: 1.25rem;
+	}
+
+	label {
+		font-weight: 600;
+		margin-bottom: 0.4rem;
+	}
+
+	button {
+		width: 100%;
+		margin-top: 0.5rem;
+	}
+	
+	.error-message {
+		background: #fee2e2;
+		color: #991b1b;
+		padding: 0.75rem 1rem;
+		border-radius: 8px;
+		margin-top: 1rem;
+	}
+</style>

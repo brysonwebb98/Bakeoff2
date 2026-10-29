@@ -1,0 +1,162 @@
+---
+const userId = Astro.cookies.get("userId")?.value;
+const role = Astro.cookies.get("role")?.value;
+
+const loggedIn = Boolean(userId && role);
+---
+
+<nav class="navbar">
+	<span class="brand">Signum</span>
+
+	<div class="nav-links">
+
+		<!-- Logged Out -->
+		{!loggedIn && (
+			<>
+				<a href="/login">Login</a>
+				<a class="signup" href="/signup">Sign Up</a>
+			</>
+		)}
+
+		<!-- Loan Officer -->
+		{loggedIn && role === "loan_officer" && (
+			<>
+				<a href="/dashboard/lo">Loan Officer Dashboard</a>
+
+				<a href="/applications/create">
+					Create Application
+				</a>
+
+				<form method="POST" action="/api/logout">
+					<button type="submit" class="logout-button">
+						Logout
+					</button>
+				</form>
+			</>
+		)}
+
+		<!-- Credit Manager -->
+		{loggedIn && role === "credit_manager" && (
+			<>
+				<a href="/dashboard/cm">
+					Credit Manager
+				</a>
+
+				<form method="POST" action="/api/logout">
+					<button type="submit" class="logout-button">
+						Logout
+					</button>
+				</form>
+			</>
+		)}
+
+	</div>
+</nav>
+
+<style>
+	.navbar {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+
+		width: 100%;
+		padding: 1rem 2rem;
+
+		background: white;
+		border-bottom: 1px solid #e5e7eb;
+	}
+
+	.brand {
+		font-size: 1.4rem;
+		font-weight: 700;
+		color: #111827;
+	}
+
+	.nav-links {
+		display: flex;
+		align-items: center;
+		gap: 1.25rem;
+	}
+
+	.nav-links a {
+		color: #4b5563;
+		font-weight: 500;
+		text-decoration: none;
+		transition: color 0.2s ease;
+	}
+
+	.nav-links a:hover {
+		color: #2563eb;
+	}
+
+	.nav-links .signup {
+		padding: 0.6rem 1rem;
+		background: #2563eb;
+		color: white;
+		border-radius: 8px;
+	}
+
+	.nav-links .signup:hover {
+		background: #1d4ed8;
+		color: white;
+	}
+
+	.nav-links form {
+		margin: 0;
+		padding: 0;
+	}
+
+	.logout-button {
+		background: none;
+		border: none;
+		color: #4b5563;
+		padding: 0;
+		font-weight: 500;
+		cursor: pointer;
+	}
+
+	.logout-button:hover {
+		background: none;
+		color: #2563eb;
+	}
+
+	@media (max-width: 800px) {
+		.navbar {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 1rem;
+			padding: 1rem;
+		}
+
+		.nav-links {
+			flex-wrap: wrap;
+			gap: 0.75rem 1rem;
+		}
+	}
+
+	@media (max-width: 550px) {
+		.nav-links {
+			width: 100%;
+			flex-direction: column;
+			align-items: flex-start;
+		}
+
+		.nav-links a,
+		.nav-links form {
+			width: 100%;
+		}
+
+		.nav-links a {
+			padding: 0.5rem 0;
+		}
+
+		.logout-button {
+			padding: 0.5rem 0;
+		}
+
+		.nav-links .signup {
+			text-align: center;
+			padding: 0.65rem 1rem;
+		}
+	}
+</style>

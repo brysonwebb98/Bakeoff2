@@ -1,0 +1,334 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { ObjectId } from "mongodb";
+import { getDb } from "../../lib/mongodb.js";
+
+export const prerender = false;
+
+const applicationId = Astro.params.id;
+const role = Astro.cookies.get("role")?.value;
+const userId = Astro.cookies.get("userId")?.value;
+
+if (!userId || !role) {
+	return Astro.redirect("/login?error=login-required");
+}
+
+if (!applicationId || !ObjectId.isValid(applicationId)) {
+	return Astro.redirect("/");
+}
+
+const db = await getDb();
+const applications = db.collection("applications");
+
+// Handle status updates
+if (Astro.request.method === "POST") {
+	const formData = await Astro.request.formData();
+	const status = formData.get("status")?.toString();
+
+	// Loan Officer can submit a pending application for review
+	if (role === "loan_officer" && status === "in_review") {
+		await applications.updateOne(
+			{
+				_id: new ObjectId(applicationId),
+				userId: new ObjectId(userId)
+			},
+			{
+				$set: {
+					status: "in_review",
+					updatedAt: new Date()
+				}
+			}
+		);
+
+		return Astro.redirect("/dashboard/lo", 303);
+	}
+
+	// Credit Manager can make a credit decision
+	if (
+		role === "credit_manager" &&
+		["approved", "countered", "denied", "in_review"].includes(status)
+	) {
+		await applications.updateOne(
+			{
+				_id: new ObjectId(applicationId)
+			},
+			{
+				$set: {
+					status,
+					updatedAt: new Date()
+				}
+			}
+		);
+
+		return Astro.redirect("/dashboard/cm", 303);
+	}
+}
+
+// Load application
+const application = await applications.findOne({
+	_id: new ObjectId(applicationId)
+});
+
+if (!application) {
+	return Astro.redirect("/");
+}
+
+// Prevent Loan Officers from viewing someone else's application
+if (
+	role === "loan_officer" &&
+	application.userId.toString() !== userId
+) {
+	return Astro.redirect("/dashboard/lo");
+}
+
+const dti = (
+	(application.monthlyDebt / application.monthlyIncome) *
+	100
+).toFixed(1);
+---
+
+<Layout title="Underwriting">
+	<section class="underwriting-container">
+
+		<div class="page-header">
+			<div>
+				<h1>Underwriting</h1>
+				<p>Review the application details and current status.</p>
+			</div>
+
+			<span class="status-badge">
+				{application.status.replace("_", " ")}
+			</span>
+		</div>
+
+		<section class="application-card">
+
+			<div class="detail">
+				<span>Borrower</span>
+				<strong>
+					{application.firstName} {application.lastName}
+				</strong>
+			</div>
+
+			<div class="detail">
+				<span>Loan Request</span>
+				<strong>
+					${application.loanRequest.toLocaleString()}
+				</strong>
+			</div>
+
+			<div class="detail">
+				<span>Purpose</span>
+				<strong>
+					{application.purpose.replace("_", " ")}
+				</strong>
+			</div>
+
+			<div class="detail">
+				<span>Monthly Income</span>
+				<strong>
+					${application.monthlyIncome.toLocaleString()}
+				</strong>
+			</div>
+
+			<div class="detail">
+				<span>Monthly Debt</span>
+				<strong>
+					${application.monthlyDebt.toLocaleString()}
+				</strong>
+			</div>
+
+			<div class="detail">
+				<span>Credit Score</span>
+				<strong>{application.creditScore}</strong>
+			</div>
+
+			<div class="detail">
+				<span>DTI</span>
+				<strong>{dti}%</strong>
+			</div>
+
+			<div class="detail">
+				<span>Status</span>
+				<strong>
+					{application.status.replace("_", " ")}
+				</strong>
+			</div>
+
+		</section>
+
+		<!-- Loan Officer Controls -->
+		{role === "loan_officer" && application.status === "pending" && (
+			<section class="decision-section">
+				<h2>Next Step</h2>
+
+				<p>
+					When the application is ready, submit it for Credit Manager review.
+				</p>
+
+				<form method="POST">
+					<button
+						type="submit"
+						name="status"
+						value="in_review"
+					>
+						Submit for Review
+					</button>
+				</form>
+			</section>
+		)}
+
+		{role === "loan_officer" && application.status !== "pending" && (
+			<section class="decision-section">
+				<h2>Application Status</h2>
+
+				<p>
+					This application is currently
+					<strong>
+						{application.status.replace("_", " ")}
+					</strong>.
+				</p>
+			</section>
+		)}
+
+		<!-- Credit Manager Controls -->
+		{role === "credit_manager" && (
+			<section class="decision-section">
+				<h2>Credit Decision</h2>
+
+				<p>
+					Review the application and select a decision.
+				</p>
+
+				<form
+					class="decision-buttons"
+					method="POST"
+				>
+					<button
+						type="submit"
+						name="status"
+						value="approved"
+					>
+						Approve
+					</button>
+
+					<button
+						type="submit"
+						name="status"
+						value="countered"
+					>
+						Counter
+					</button>
+
+					<button
+						type="submit"
+						name="status"
+						value="denied"
+					>
+						Deny
+					</button>
+
+					<button
+						type="submit"
+						name="status"
+						value="in_review"
+					>
+						Keep In Review
+					</button>
+				</form>
+			</section>
+		)}
+
+	</section>
+</Layout>
+
+<style>
+	.underwriting-container {
+		max-width: 850px;
+		margin: 0 auto;
+	}
+
+	.page-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 1rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.status-badge {
+		padding: 0.5rem 0.8rem;
+		background: #e5e7eb;
+		border-radius: 999px;
+		font-weight: 600;
+		text-transform: capitalize;
+	}
+
+	.application-card {
+		background: white;
+		padding: 2rem;
+		border-radius: 12px;
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 1.5rem;
+	}
+
+	.detail {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.detail span {
+		font-size: 0.85rem;
+		color: #6b7280;
+	}
+
+	.detail strong {
+		font-size: 1.05rem;
+		text-transform: capitalize;
+	}
+
+	.decision-section {
+		background: white;
+		padding: 2rem;
+		border-radius: 12px;
+		margin-top: 1.5rem;
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+	}
+
+	.decision-section form:not(.decision-buttons) button {
+		width: 100%;
+		margin-top: 0.75rem;
+	}
+
+	.decision-buttons {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 1rem;
+		margin-top: 1rem;
+	}
+
+  @media (max-width: 700px) {
+		.page-header {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+
+		.application-card {
+			grid-template-columns: 1fr;
+		}
+
+		.decision-buttons {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+
+	@media (max-width: 450px) {
+		.decision-buttons {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
